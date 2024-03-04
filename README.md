@@ -1,1 +1,1 @@
-# cloudrun-configure-secrets
+# gcp-cloudrun-access-secrets-manager
