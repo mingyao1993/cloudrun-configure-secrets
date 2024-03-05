@@ -1,0 +1,54 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: internal
+  labels:
+    cloud.googleapis.com/location: {{ .Values.location }}
+  name: gcp-cloudrun-access-secret-manager
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '1'
+        autoscaling.knative.dev/minScale: '0'
+        run.googleapis.com/startup-cpu-boost: 'false'
+    spec:
+      containerConcurrency: 1
+      containers:
+      - name: gcp-cloudrun-access-secret-manager
+        image: {{ .Values.location }}-docker.pkg.dev/{{ .Values.projectId }}/{{ .Values.artifactRegistryName }}/{{ .Values.imageName }}:{{ .Values.commitSha }}
+        ports:
+        - name: http1
+          containerPort: 8080
+        env:
+        - name: my_secret
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: my_secret
+        resources:
+          limits:
+            cpu: 80m
+            memory: 128Mi
+        volumeMounts:
+        - name: secret-1
+          mountPath: /secrets
+        startupProbe:
+          timeoutSeconds: 240
+          periodSeconds: 240
+          failureThreshold: 1
+          tcpSocket:
+            port: 8080
+      volumes:
+      - name: secret-1
+        secret:
+          secretName: my_secret
+          items:
+          - key: latest
+            path: my_secret
+      serviceAccountName: {{ .Values.serviceAccountName }}@{{ .Values.projectId }}.iam.gserviceaccount.com
+      timeoutSeconds: 300
+  traffic:
+    - latestRevision: true
+      percent: 100
