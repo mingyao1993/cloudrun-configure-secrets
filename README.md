@@ -81,6 +81,8 @@ Finally, deploy the Cloud Run service by executing the following command:
 gcloud run services replace infra/service.yaml
 ```
 
+Finally, you can trigger the Cloud Run service through methods like HTTP requests or Pub/Sub messages.
+
 ## Troubleshooting
 
 For troubleshooting and additional information, please refer to
